@@ -17,7 +17,7 @@ from CybORG.Simulator.Actions.ConcreteActions.ControlTraffic import BlockTraffic
 from CybORG.Simulator.Actions.ConcreteActions.ExploitActions.ExploitAction import ExploitAction
 from CybORG.Simulator.Scenarios import DroneSwarmScenarioGenerator
 from CybORG.Tests.utils import CustomGenerator
-# from CybORG.render.renderer import Renderer
+#from CybORG.render.renderer import Renderer
 
 
 
@@ -79,7 +79,7 @@ class CybORG(CybORGLogger):
         else:
             self.np_random = seed
         self.environment_controller = self._create_env_controller(env_config, agents)
-        # self.renderer:Renderer = None
+        #self.renderer:Renderer = None
 
     # getter method
     def get_renderer(self):
@@ -144,11 +144,12 @@ class CybORG(CybORGLogger):
         Results
             the result of agent performing the action
         """
+        print("====Perform a step====")
         if action is None or agent is None:
             action = {}
         else:
             action = {agent: action}
-        print('action is:',action)
+        print('The action to be performed is:',action)
         self.environment_controller.step(action, skip_valid_action_check)
         self.environment_controller.send_messages(messages)
         if agent is None:
@@ -160,6 +161,7 @@ class CybORG(CybORGLogger):
                              action_space=self.environment_controller.agent_interfaces[
                                  agent].action_space.get_action_space(),
                              action=self.environment_controller.action[agent])
+        print("====This step is Done====")
         return result
 
     def start(self, steps: int, log_file=None, verbose=False) -> bool:
@@ -437,7 +439,7 @@ class CybORG(CybORGLogger):
         return self.environment_controller.get_active_agents()
 
     def render(self, mode='human'):
-        raise NotImplementedError("Rendering functionality is not currently available")
+        print("Srtart Rendering")
         assert self.env == 'sim', 'render is currently only available for the simulation'
         assert mode in ['human', 'rgb_array'], f"render is not available for {mode}, please use a mode from {['human', 'rgb_array']}"
         if self.renderer is None:

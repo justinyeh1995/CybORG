@@ -18,11 +18,11 @@ def run_episode_cc2(cyborg, agent):
     a = ''
     for i in range(100):
         # print(cyborg.environment_controller.get_last_action('Red'))
-        stop = cyborg.render()
+        # stop = cyborg.render()
         action_space = cyborg.get_action_space('Blue')
         obs = cyborg.get_observation('Blue')
-        if stop:
-            break
+        # if stop:
+        #    break
         action = agent.get_action(obs, action_space)
         cyborg.step('Blue', action)
         # a = input(f'Step {i}, use q to quit, use n to go to next demo')
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     num_drones=20
     sg = DroneSwarmScenarioGenerator(num_drones=num_drones, max_length_data_links=25, red_spawn_rate=0, starting_num_red=0)
     cyborg = CybORG(sg, 'sim')
-    cyborg.render()
+    #cyborg.render()
     input('start2?')
     # Using pygame's clock to control the frame rate of the render
     clock = pygame.time.Clock()
@@ -72,9 +72,9 @@ if __name__ == "__main__":
     for i in range(50):
         for i in range(500):
             # print(cyborg.environment_controller.get_last_action('Red'))
-            stop = cyborg.render()
-            if stop:
-                break
+            #stop = cyborg.render()
+            #if stop:
+            #    break
             cyborg.step()
             # for agent in cyborg.active_agents:
             #     if 'red' in agent:
