@@ -157,7 +157,7 @@ class GameStateManager:
                         for node in link_diagram.nodes]
 
         compromised_hosts = self.compromised_hosts.copy()
-# 
+        
         action_snapshot = {
             # Populate with necessary state information
             'link_diagram': link_diagram.copy(),  # Assuming link_diagram is a NetworkX graph
