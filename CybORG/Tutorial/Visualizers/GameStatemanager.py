@@ -42,7 +42,7 @@ class GameStateManager:
                 color = 'rosybrown'
         
         if node in discovered_systems:
-            color = "lightgreen"
+            color = "pink"
         
         if node in escalated_hosts:
             color = "red"
@@ -53,10 +53,10 @@ class GameStateManager:
         return color
 
     def _get_node_border(self, node, target_host=None, reset_host=None):
-        if node in target_host:
-            border = dict(width=2, color='#99004C')
-        elif node in reset_host:
-            border = dict(width=2, color='blue')
+        if target_host and node in target_host:
+            border = dict(width=2, color='black')
+        elif reset_host and node in reset_host:
+            border = dict(width=2, color='black')
         else:
             border = dict(width=0, color='white')
         return border
@@ -69,64 +69,38 @@ class GameStateManager:
             # Update target host if it's an IP address to get the hostname
             target_host = ip_map.get(target_host, target_host)
         return target_host, action_type
-    
-    def _update_host_status(self, cyborg, red_action_str, blue_action_str, host_map, ip_map):
+
+    def _update_host_status(self, cyborg, action_str, host_map, ip_map, host_type='Red'):
         target_host, discovered_subnet, discovered_system, exploited_host, escalated_host = None, None, None, None, None
         reset_host, remove_host, restore_host = None, None, None
-        
-        # Check Red's actions
-        target_host, action_type = self._parse_action(cyborg, red_action_str, 'Red', host_map, ip_map)
-        
-        if target_host:
-            if 'ExploitRemote' in action_type:
-                exploited_host = target_host
-            elif 'Privilege' in action_type or 'Impact' in action_type:
-                escalated_host = target_host
-            elif 'DiscoverRemoteSystems' in action_type:
-                _cidr = ".".join(target_host.split(".")[:3])
-                for ip in ip_map:
-                    if _cidr in ip and 'router' in ip_map[ip]:
-                        discovered_subnet = ip_map[ip]
-                        target_host = discovered_subnet
-            elif 'DiscoverNetworkServices' in action_type:
-                discovered_system = target_host
-                
-        # Check Blue's actions
-        reset_host, action_type = parse_action(cyborg, blue_action_str, 'Blue', host_map, ip_map)
-        if reset_host:
-            if 'Remove' in action_type:
-                remove_host = reset_host
-            elif 'Restore' in action_type:
-                restore_host = reset_host
-    
-        return target_host, reset_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
-    
-    def create_state_snapshot(self):
-        # ... Logic to create and return a snapshot of the current game state ...
-        ############
-        ## fo viz ##
-        ############
-        link_diagram = self.cyborg.environment_controller.state.link_diagram
-        red_action_str = self.cyborg.get_last_action('Red').__str__()
-        blue_action_str = self.cyborg.get_last_action('Blue').__str__()
-        
-        (
-            target_host,
-            reset_host,
-            discovered_subnet, 
-            discovered_system,
-            exploited_host,
-            escalated_host,
-            remove_host,
-            restore_host
-        ) = self._update_host_status(
-            self.cyborg,
-            red_action_str,
-            blue_action_str,
-            self.host_map,
-            self.ip_map
-        )       
 
+        if host_type == 'Red':
+            # Check Red's actions
+            target_host, action_type = self._parse_action(cyborg, action_str, 'Red', host_map, ip_map)
+            
+            if target_host:
+                if 'ExploitRemote' in action_type:
+                    exploited_host = target_host
+                elif 'Privilege' in action_type or 'Impact' in action_type:
+                    escalated_host = target_host
+                elif 'DiscoverRemoteSystems' in action_type:
+                    _cidr = ".".join(target_host.split(".")[:3])
+                    for ip in ip_map:
+                        if _cidr in ip and 'router' in ip_map[ip]:
+                            discovered_subnet = ip_map[ip]
+                            target_host = discovered_subnet
+                elif 'DiscoverNetworkServices' in action_type:
+                    discovered_system = target_host
+                    
+        elif host_type == 'Blue':
+            # Check Blue's actions
+            reset_host, action_type = self._parse_action(cyborg, action_str, 'Blue', host_map, ip_map)
+            if reset_host:
+                if 'Remove' in action_type:
+                    remove_host = reset_host
+                elif 'Restore' in action_type:
+                    restore_host = reset_host
+        
         if discovered_subnet:
             self.discovered_subnets.add(discovered_subnet)
 
@@ -145,14 +119,35 @@ class GameStateManager:
         if restore_host:
             self.escalated_hosts.discard(restore_host)
             self.compromised_hosts.discard(restore_host)
+            
+        return target_host, reset_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
 
-        # print(self.compromised_hosts)
+    def _create_action_snapshot(self, action_str, host_type):
+        link_diagram = self.cyborg.environment_controller.state.link_diagram
         
-        agent_actions = {
-            "Red": {"action": red_action_str, "success": self.cyborg.get_observation('Red')['success'].__str__()},
-            "Blue": {"action": blue_action_str, "success": self.cyborg.get_observation('Blue')['success'].__str__()}
+        action_info = {
+            "action": action_str, 
+            "success": self.cyborg.get_observation('Blue')['success'].__str__()
         }
+        
+        (
+            target_host,
+            reset_host,
+            discovered_subnet, 
+            discovered_system,
+            exploited_host,
+            escalated_host,
+            remove_host,
+            restore_host
+        ) = self._update_host_status(
+            self.cyborg,
+            action_str,
+            self.host_map,
+            self.ip_map,
+            host_type=host_type
+        )
 
+        
         node_colors = [self._get_node_color(node, 
                                       discovered_subnets=self.discovered_subnets,
                                       discovered_systems=self.discovered_systems,
@@ -165,19 +160,35 @@ class GameStateManager:
                                         reset_host=reset_host) 
                         for node in link_diagram.nodes]
 
-        state_snapshot = {
+        compromised_hosts = self.compromised_hosts.copy()
+
+        action_snapshot = {
             # Populate with necessary state information
             'link_diagram': link_diagram.copy(),  # Assuming link_diagram is a NetworkX graph
             'node_colors': node_colors.copy(),
             'node_borders': node_borders.copy(),
-            'compromised_hosts': self.compromised_hosts.copy(),
+            'compromised_hosts': compromised_hosts.copy(),
             # 'exploited_hosts': exploited_hosts.copy(),
             # 'escalated_hosts': escalated_hosts.copy(),
-            'agent_actions': agent_actions.copy(),
+            'action_info': action_info.copy(),
             # 'ip_map': self.ip_map.copy(),
             'host_map': self.host_map.copy(),
         }
 
+        return action_snapshot
+        
+    def create_state_snapshot(self):
+        # ... Logic to create and return a snapshot of the current game state ...
+        ############
+        ## fo viz ##
+        ############
+
+        state_snapshot = {}
+        
+        for type in ['Blue', 'Red']:
+            action_str = self.cyborg.get_last_action(type).__str__()
+            state_snapshot[type] = self._create_action_snapshot(action_str, type)
+            
         return state_snapshot
 
     def reset(self):
