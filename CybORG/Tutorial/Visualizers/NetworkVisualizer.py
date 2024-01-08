@@ -18,6 +18,12 @@ class NetworkVisualizer:
         self.seed = 3113794652
         self.save = None
         
+    def set_game_state(self, agent_game_states):
+        self.agent_game_states = agent_game_states
+
+    def set_seed(self, seed):
+        self.seed = seed
+        
     def _get_node_type(self, node):
         type = ""
         if 'router' in node:

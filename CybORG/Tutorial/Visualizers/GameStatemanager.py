@@ -34,20 +34,20 @@ class GameStateManager:
         self.ip_map = dict(map(lambda item: (str(item[0]), item[1]), self.cyborg.environment_controller.state.ip_addresses.items()))
         self.host_map = {host: str(ip) for ip, host in self.ip_map.items()}
 
-    def _get_node_color(self, node, discovered_subnets=None, discovered_systems=None, exploited_hosts=None, escalated_hosts=None):
+    def _get_node_color(self, node):
         color = "green"
         
         if 'router' in node:
-            if node in discovered_subnets:
+            if node in self.discovered_subnets:
                 color = 'rosybrown'
         
-        if node in discovered_systems:
+        if node in self.discovered_systems:
             color = "pink"
         
-        if node in escalated_hosts:
+        if node in self.escalated_hosts:
             color = "red"
             
-        elif node in exploited_hosts:
+        elif node in self.exploited_hosts:
             color = "orange"
         
         return color
@@ -65,9 +65,12 @@ class GameStateManager:
         action_type = action_str.split(" ")[0]
         target_host = ""
         if cyborg.get_observation(agent)['success'].__str__() == 'TRUE':
-            target_host = action_str.split(" ")[-1]
+            action_str_split = action_str.split(" ")
+            n = len(action_str_split)
+            target_host = action_str_split[-1] if n > 1 else target_host
             # Update target host if it's an IP address to get the hostname
-            target_host = ip_map.get(target_host, target_host)
+            print(target_host)
+            target_host = ip_map.get(target_host, target_host) if target_host in ip_map else target_host
         return target_host, action_type
 
     def _update_host_status(self, cyborg, action_str, host_map, ip_map, host_type='Red'):
@@ -77,11 +80,10 @@ class GameStateManager:
         if host_type == 'Red':
             # Check Red's actions
             target_host, action_type = self._parse_action(cyborg, action_str, 'Red', host_map, ip_map)
-            
             if target_host:
                 if 'ExploitRemote' in action_type:
                     exploited_host = target_host
-                elif 'Privilege' in action_type or 'Impact' in action_type:
+                elif 'PrivilegeEscalate' in action_type or 'Impact' in action_type:
                     escalated_host = target_host
                 elif 'DiscoverRemoteSystems' in action_type:
                     _cidr = ".".join(target_host.split(".")[:3])
@@ -110,7 +112,7 @@ class GameStateManager:
         if exploited_host:
             self.exploited_hosts.add(exploited_host)
             self.compromised_hosts.add(exploited_host)
-        if remove_host or restore_host:
+        if remove_host:
             self.exploited_hosts.discard(remove_host)
             self.compromised_hosts.discard(remove_host)
         if escalated_host:
@@ -127,7 +129,7 @@ class GameStateManager:
         
         action_info = {
             "action": action_str, 
-            "success": self.cyborg.get_observation('Blue')['success'].__str__()
+            "success": self.cyborg.get_observation(host_type)['success'].__str__()
         }
         
         (
@@ -147,13 +149,7 @@ class GameStateManager:
             host_type=host_type
         )
 
-        
-        node_colors = [self._get_node_color(node, 
-                                      discovered_subnets=self.discovered_subnets,
-                                      discovered_systems=self.discovered_systems,
-                                      exploited_hosts=self.exploited_hosts, 
-                                      escalated_hosts=self.escalated_hosts) 
-                       for node in link_diagram.nodes]
+        node_colors = [self._get_node_color(node) for node in link_diagram.nodes]
         
         node_borders = [self._get_node_border(node, 
                                         target_host=target_host, 
@@ -161,7 +157,7 @@ class GameStateManager:
                         for node in link_diagram.nodes]
 
         compromised_hosts = self.compromised_hosts.copy()
-
+# 
         action_snapshot = {
             # Populate with necessary state information
             'link_diagram': link_diagram.copy(),  # Assuming link_diagram is a NetworkX graph
