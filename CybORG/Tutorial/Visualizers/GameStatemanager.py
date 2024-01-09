@@ -6,6 +6,7 @@ from statistics import mean, stdev
 import random
 import collections
 from pprint import pprint
+from CybORG.Agents.Wrappers.TrueTableWrapper import true_obs_to_table
 
 class GameStateManager:
     def __init__(self):
@@ -15,6 +16,8 @@ class GameStateManager:
         self.num_steps = None
         self.ip_map = None
         self.host_map = None
+        self.true_state = None
+        self.true_table = None
         self.game_states = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
         
         self.compromised_hosts = set()
@@ -33,6 +36,13 @@ class GameStateManager:
     def _create_ip_host_maps(self):
         self.ip_map = dict(map(lambda item: (str(item[0]), item[1]), self.cyborg.environment_controller.state.ip_addresses.items()))
         self.host_map = {host: str(ip) for ip, host in self.ip_map.items()}
+
+    def _get_true_state(self):
+        return self.cyborg.get_agent_state('True')
+
+    def _get_true_state_table(self):
+        self.true_state = self._get_true_state()
+        return true_obs_to_table(self.true_state, self.cyborg)
 
     def _get_node_color(self, node):
         color = "green"
@@ -157,6 +167,8 @@ class GameStateManager:
                         for node in link_diagram.nodes]
 
         compromised_hosts = self.compromised_hosts.copy()
+
+        self.true_table = self._get_true_state_table()
         
         action_snapshot = {
             # Populate with necessary state information
