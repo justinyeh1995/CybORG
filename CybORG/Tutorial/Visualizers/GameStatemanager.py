@@ -20,9 +20,9 @@ class GameStateManager:
         self.true_table = None
         self.game_states = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
         
-        self.compromised_hosts = set()
+        self.compromised_hosts = set(['User0'])
         self.exploited_hosts = set()
-        self.escalated_hosts = set()
+        self.escalated_hosts = set(['User0'])
         self.discovered_subnets = set()
         self.discovered_systems = set()
 
@@ -200,9 +200,9 @@ class GameStateManager:
         return state_snapshot
 
     def reset(self):
-        self.compromised_hosts = set()
+        self.compromised_hosts = set(['User0'])
         self.exploited_hosts = set()
-        self.escalated_hosts = set()
+        self.escalated_hosts = set(['User0'])
         self.discovered_subnets = set()
         self.discovered_systems = set()
         self._create_ip_host_maps()
