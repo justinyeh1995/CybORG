@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import networkx as nx
 from networkx import connected_components
@@ -154,7 +155,7 @@ class NetworkVisualizer:
 
         # Save and show the figure
         if self.save:
-            self._save_figure(fig, red_agent, step)
+            self._save_figure(fig, red_agent_name, step)
             
         fig.show()
 
