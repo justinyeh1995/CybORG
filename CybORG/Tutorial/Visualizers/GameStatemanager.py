@@ -2,10 +2,12 @@ import subprocess
 import inspect
 import time
 import os
+from copy import deepcopy
 from statistics import mean, stdev
 import random
 import collections
 from pprint import pprint
+from enum import Enum
 from CybORG.Agents.Wrappers.TrueTableWrapper import true_obs_to_table
 
 class GameStateManager:
@@ -38,12 +40,42 @@ class GameStateManager:
         self.host_map = {host: str(ip) for ip, host in self.ip_map.items()}
 
     def _get_true_state(self):
-        return self.cyborg.get_agent_state('True')
+        return deepcopy(self.cyborg.get_agent_state('True'))
 
     def _get_true_state_table(self):
         self.true_state = self._get_true_state()
         return true_obs_to_table(self.true_state, self.cyborg)
 
+    def _get_host_info(self, node):
+        if '_router' in node:
+            return ""
+
+        hover_text = ""
+
+        true_obs = self._get_true_state()
+        node_info = true_obs[node]
+
+        hover_text += "System info:<br>"
+        system_info = node_info.get('System info', {})
+        os_info = f"{system_info.get('OSType', '').name} " \
+          f"{system_info.get('OSDistribution', '').name} " \
+          f"({system_info.get('Architecture', '').name})"
+
+        hover_text += os_info + "<br><br>"
+
+        hover_text += "Processes info:<br>"
+        
+        processes = node_info.get('Processes', [])
+        for proc in processes:
+            process_name = proc.get('Process Name', 'N/A')
+            pid = proc.get('PID', 'N/A')
+            username = proc.get('Username', 'N/A')
+            port_info = ', '.join([f"Port: {conn['local_port']}" for conn in proc.get('Connections', [])])
+            hover_text+=f"- {process_name} (PID: {pid}, User: {username}, {port_info})<br>"
+
+        return hover_text
+        
+    
     def _get_node_color(self, node):
         color = "green"
         
@@ -166,6 +198,8 @@ class GameStateManager:
                                         reset_host=reset_host) 
                         for node in link_diagram.nodes]
 
+        host_info = [self._get_host_info(node) for node in link_diagram.nodes]
+
         compromised_hosts = self.compromised_hosts.copy()
 
         self.true_table = self._get_true_state_table()
@@ -176,6 +210,7 @@ class GameStateManager:
             'node_colors': node_colors.copy(),
             'node_borders': node_borders.copy(),
             'compromised_hosts': compromised_hosts.copy(),
+            'host_info': host_info.copy(),
             # 'exploited_hosts': exploited_hosts.copy(),
             # 'escalated_hosts': escalated_hosts.copy(),
             'action_info': action_info.copy(),
