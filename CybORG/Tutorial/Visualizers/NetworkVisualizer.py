@@ -5,6 +5,7 @@ from networkx import connected_components
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
+from html import escape
 
 class NetworkVisualizer:
     def __init__(self, agent_game_states):
@@ -40,6 +41,21 @@ class NetworkVisualizer:
             type = 'host'
         return type
 
+    def _convert_reward_format(self, rewards, ordered=False):
+        """
+        Convert a dictionary of rewards into an HTML formatted list.
+    
+        Args:
+        rewards (dict): A dictionary containing reward metrics and values.
+    
+        Returns:
+        str: An HTML string representing the rewards in list format.
+        """
+        if not rewards:
+            return '<br>No rewards'
+        return "".join([f'<br>&nbsp;&nbsp;&nbsp;• {metric}: {round(value,2)}' for metric, value in rewards.items()])
+
+
     def plot(self, save=True):
         self.save = save
         for num_steps in self.agent_game_states:
@@ -57,6 +73,8 @@ class NetworkVisualizer:
         node_borders = state['node_borders']
         action_info = state['action_info']
         host_map = state['host_map']
+        reward = self._convert_reward_format(state['reward'])
+        accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
 
         # 'link_diagram' is the NetworkX graph
         pos = nx.spring_layout(link_diagram, seed=self.seed)
@@ -125,7 +143,7 @@ class NetworkVisualizer:
                                     <br>Red Agent Name: {red_agent_name}\
                                     <br>Episode: {episode+1}\
                                     <br>Display <b>{agent}</b> Agent\
-                                    <br>Step {step+1}',
+                                    <br><b>Step {step+1}</b>',
                             title_x=0.0,  # Centers the title
                             title_y=0.85,
                             titlefont_size=12,
@@ -143,10 +161,17 @@ class NetworkVisualizer:
         observations_annotations.append(dict(
             xref='paper', yref='paper',
             x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
-            text=f"{agent}: <br>{action_info['action']} <br>Success: {action_info['success']}",
+            text=f"<br>🎯{agent} Action: {action_info['action']} \
+                    <br>✅Success: {action_info['success']} \
+                    <br>💰Reward: {reward} \
+                    <br>💎Accumulated {agent} Reward: {accumulate_reward}",
             showarrow=False,
             visible=True,  # Initially not visible
-            align="left"  # Ensure text is aligned for both agents
+            align="left",  # Ensure text is aligned for both agents
+            font=dict(
+                size=10,
+                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+            )
         ))
         
         # Prepare and plot the figure
