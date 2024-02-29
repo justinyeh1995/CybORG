@@ -70,6 +70,26 @@ def get_links_info(cyborg, cyborg_to_mininet_name_map) -> List:
         })
     return links_info
 
+
+def build_mininet_host_to_cyborg_ip_map(topology):
+    mininet_host_to_cyborg_ip_map = {}
+    for entry in topology["topo"]['lans']:
+        lan_name = entry['name']
+        for host, ip in entry['hosts_info'].items():
+            mininet_host_to_cyborg_ip_map[f"{lan_name}{host}"] = ip
+        mininet_host_to_cyborg_ip_map[entry['router']] = entry['router_ip']
+    return mininet_host_to_cyborg_ip_map
+
+
+def build_cyborg_ip_to_mininet_host_map(topology):
+    cyborg_ip_to_mininet_host_map = {}
+    for entry in topology["topo"]['lans']:
+        lan_name = entry['name']
+        for host, ip in entry['hosts_info'].items():
+            cyborg_ip_to_mininet_host_map[ip] = f"{lan_name}{host}"
+        cyborg_ip_to_mininet_host_map[entry['router_ip']] = entry['router']
+    return cyborg_ip_to_mininet_host_map
+
     
 def generate_routing_rules(topology):
     routers_cidr = { entry['router']: entry['subnet'] for entry in topology["topo"]['lans']}
