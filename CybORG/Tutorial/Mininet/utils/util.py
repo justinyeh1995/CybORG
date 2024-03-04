@@ -3,7 +3,7 @@ import collections
 from pprint import pprint
 from typing import Iterator, Pattern, Tuple, Dict, List
 from ipaddress import IPv4Address, IPv4Network
-from Mininet.mininet_utils import custom_utils as cu
+from CybORG.Tutorial.Mininet.mininet_utils import custom_utils as cu
 
 def set_name_map(cyborg) -> Dict:
     cyborg_to_mininet_name_map = collections.defaultdict(str)
@@ -30,7 +30,6 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
         
         hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
-        # pprint(cyborg.get_ip_map())
         router_ip = str(cyborg.get_ip_map()[f'{lan_name}_router'])
         
         lans_info.append({
@@ -89,8 +88,8 @@ def build_cyborg_ip_to_mininet_host_map(topology):
             cyborg_ip_to_mininet_host_map[ip] = f"{lan_name}{host}"
         cyborg_ip_to_mininet_host_map[entry['router_ip']] = entry['router']
     return cyborg_ip_to_mininet_host_map
-
     
+
 def generate_routing_rules(topology):
     routers_cidr = { entry['router']: entry['subnet'] for entry in topology["topo"]['lans']}
     routers_ip = { entry['router']: entry['ip'] for entry in topology["topo"]['routers']}
@@ -118,7 +117,6 @@ def generate_routing_rules(topology):
         for entry in entries:
             entry_str = f"{entry['to']} via {entry['via']} dev {entry['dev']}"
             router_rules["entries"].append(entry_str)
-            
         if i == len(routes)-1: # To-Do: Hard coding is always bad
             ip_prefix, prefix_len, last_octet = cu.IP_components (routers_cidr[router])
 
@@ -134,6 +132,8 @@ def generate_routing_rules(topology):
         for subnet in nat['subnets']:
             entry_str = f"{subnet} via {router_ip} dev {nat['name']}-eth0"
             router_rules["entries"].append(entry_str)
+
+    # pprint(routing_rules)
 
     return routing_rules
 
@@ -161,6 +161,7 @@ def parse_action(cyborg, action_str, agent, ip_to_host_map):
         target_host = action_str_split[-1] if n > 1 else target_host
         # Update target host if it's an IP address to get the hostname
         target_host = ip_to_host_map.get(target_host, target_host) #if target_host in ip_to_host_map else target_host
+        # target_host = 
     return target_host, action_type, isSuccess
 
 

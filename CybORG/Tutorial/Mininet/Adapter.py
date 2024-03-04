@@ -116,7 +116,6 @@ class MininetAdapter:
             print(e)
             traceback.print_exc() 
 
-        
     
     def update_mapping(self, output: str) -> None:
         
@@ -243,8 +242,7 @@ class MininetAdapter:
                 target_host, action_type, isSucess = self._parse_last_action(agent_type)
                 print((agent_type, action_type, isSucess, target_host))
     
-                command = self.build_red_cmd(action_type, target_host) if agent_type == "Red" \
-                                                                       else self.build_blue_cmd(action_type, target_host)
+                command = self.build_red_cmd(action_type, target_host) if agent_type == "Red" else self.build_blue_cmd(action_type, target_host)
 
                 print(command)
                 # Send the command to Mininet
@@ -269,16 +267,16 @@ class MininetAdapter:
             print(str(e))
             traceback.print_exc() 
 
-    
+
     def bundle_results(self, output: str) -> str:
         pass
-    
+        
     
     def perform_emulation(self):
         for type in ['Blue', 'Red']:
             output = self.send_mininet_command(type)
             print(output)
-            # @To-Do Parse the output from the command
+            # do something?
     
     
     def clean(self) -> None:

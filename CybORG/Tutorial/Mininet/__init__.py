@@ -1,1 +1,1 @@
-from .Adapter import MininetAdapter
+# from .Adapter import MininetAdapter
