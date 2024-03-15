@@ -162,7 +162,7 @@ def parse_action(cyborg, action_str, agent, ip_to_host_map):
         # Update target host if it's an IP address to get the hostname
         target_host = ip_to_host_map.get(target_host, target_host) #if target_host in ip_to_host_map else target_host
         # target_host = 
-    return target_host, action_type, isSuccess
+    return target_host, action_type, isSuccess == 'TRUE'
 
 
 def find_matches(pattern_str: str, raw_text: str) -> Iterator[re.Match]:
@@ -178,13 +178,14 @@ def find_matches(pattern_str: str, raw_text: str) -> Iterator[re.Match]:
 def parse_mininet_ip(raw_text: str) -> list:
     pattern_str1: str = r'(Router):\s+(?P<host>\S+)\s+with IP:\s+(?P<ip>\S+)'
     pattern_str2: str = r'(Host)\s+(?P<host>\S+)\s+with IP:\s+(?P<ip>\S+)'
-    
+    pattern_str3: str = r'(NAT)\s+(?P<host>\S+) with IP: (?P<ip>\S+)'
+
     # Find all matches in the decoded output
     matches1: Iterator[re.Match] = find_matches(pattern_str1, raw_text)
     matches2: Iterator[re.Match] = find_matches(pattern_str2, raw_text)
-
+    matches3: Iterator[re.Match] = find_matches(pattern_str3, raw_text)
     # Convert match iterators to lists and concatenate them
-    matches: list = list(matches1) + list(matches2)
+    matches: list = list(matches1) + list(matches2) + list(matches3)
 
     return matches
 

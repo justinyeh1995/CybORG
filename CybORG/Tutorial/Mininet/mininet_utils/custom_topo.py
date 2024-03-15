@@ -228,6 +228,13 @@ class CustomTopology (Topo):
         net[nat_node].cmd( 'iptables -t nat -D POSTROUTING',
                            '-s', subnet, "'!'", '-d', subnet, '-j MASQUERADE' )
 
+  def startSSHServer(self, net):
+    for lan in self.topo_dict['lans']:
+      for host_name, host_info in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        info (f"Start ssh server on {host}")
+        net[host].cmd('/usr/sbin/sshd -D &')
+
   ##########################################
   # The overridden build method
   ##########################################

@@ -24,7 +24,7 @@ class YamlTopologyManager:
             # Structure the 'Links' information
             self.topology_data['topo']['links'] = get_links_info(cyborg, cyborg_to_mininet_name_map)
 
-            self.topology_data['topo']['nats'] = get_nats_info(cyborg, self.topology_data)
+            # self.topology_data['topo']['nats'] = get_nats_info(cyborg, self.topology_data)
 
             self.topology_data['topo']['routes'] = generate_routing_rules(self.topology_data)
 

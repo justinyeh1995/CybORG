@@ -154,13 +154,12 @@ def main(agent_type: str, cyborg_type: str) -> None:
                     
                     # create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot()
-                    # game manager store state
-                    game_state_manager.store_state(state_snapshot, i, j)
-
                     # The adapter should pass the action as a param
                     mininet_adapter.perform_emulation()
                     # pprint(mininet_adapter)
-
+                    # game_state_manager.update_state_snapshot(mininet_adapter)
+                    # game manager store state
+                    game_state_manager.store_state(state_snapshot, i, j)
                     
                 # game manager reset
                 agent.end_episode()

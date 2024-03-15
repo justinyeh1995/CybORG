@@ -73,7 +73,11 @@ def main ():
   # Now add the iptable rules in the nat nodes
   info ("Add additional iptable rules per subnet that needs NAT access\n")
   topo.add_nat_rules (net)
-  
+
+  # Now start ssh server
+  info ("Start SSH server on every host")
+  topo.startSSHServer (net)
+    
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
   CLI (net)   # this gives us mininet prompt

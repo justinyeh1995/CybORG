@@ -60,6 +60,7 @@ class MininetAdapter:
         
         # Start Mininet with the topology
         expect_text = self.command_interface.start_mininet(file_path)
+        # pprint(expect_text)
 
         self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
 
@@ -70,8 +71,8 @@ class MininetAdapter:
         # @To-Do
         obs = {}
         for type in ['Blue', 'Red']:
-            cyborg_action, target, isSuccess = self._parse_last_action(type)
-            
+            target, cyborg_action, isSuccess = self._parse_last_action(type)
+
             if type == "Blue":
                 mininet_command = self.blue_action_translator.translate(cyborg_action, 
                                                                     target, 
@@ -81,10 +82,15 @@ class MininetAdapter:
                                                                     target,
                                                                     self.mapper.cyborg_to_mininet_host_map)
                 
-            mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else "Unsuccessful Action"
+            mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
+            
             print(mininet_cli_text)
-            mininet_obs = self.results_bundler.bundle(mininet_cli_text)
+            
+            mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
+
+            pprint(mininet_obs)
             obs[type] = mininet_obs
+        
         return obs
 
     
