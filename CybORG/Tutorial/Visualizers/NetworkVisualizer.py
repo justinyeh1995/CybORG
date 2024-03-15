@@ -2,10 +2,30 @@ import os
 import matplotlib.pyplot as plt
 import networkx as nx
 from networkx import connected_components
+from pprint import pprint
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 from html import escape
+
+def format_dict_for_display(data, indent=0):
+    # Helper function to add indentation
+    def add_indent(s, num_spaces):
+        return " " * num_spaces + s
+    
+    if isinstance(data, dict):
+        formatted_lines = []
+        for key, value in data.items():
+            if key != 'success':
+                formatted_value = format_dict_for_display(value, indent + 4)  # Increase indent for nested dicts
+                formatted_lines.append(add_indent(f"{key}: {formatted_value}", indent))
+        return "<br>"+"<br>".join(formatted_lines)
+    elif isinstance(data, list):
+        formatted_list = [format_dict_for_display(item) for item in data]  # Apply formatting to each list item
+        return "<br>".join([add_indent(item, indent) for item in formatted_list])
+    else:
+        return add_indent(str(data), indent)
+
 
 class NetworkVisualizer:
     def __init__(self, agent_game_states):
@@ -73,6 +93,8 @@ class NetworkVisualizer:
         node_borders = state['node_borders']
         action_info = state['action_info']
         host_map = state['host_map']
+        sim_obs = state['sim_obs']
+        mininet_obs = state['mininet_obs']
         reward = self._convert_reward_format(state['reward'])
         accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
 
@@ -144,35 +166,63 @@ class NetworkVisualizer:
                                     <br>Episode: {episode+1}\
                                     <br>Display <b>{agent}</b> Agent\
                                     <br><b>Step {step+1}</b>',
-                            title_x=0.0,  # Centers the title
-                            title_y=0.85,
-                            titlefont_size=12,
+                            title_x=0.00,  # Centers the title
+                            title_y=0.98,
+                            titlefont_size=10,
                             showlegend=False,
                             hovermode='closest',
-                            margin=dict(b=20,l=5,r=5,t=40),
+                            margin=dict(b=15,l=5,r=50,t=80),
                             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
                         )
         
         # Create annotations for agent actions, initially invisible
-        observations_annotations = []
-        vertical_padding = 0.18
+        vertical_padding = 0.2
         # for idx, action_info in enumerate(action_info):
-        observations_annotations.append(dict(
+        simulation_obs = dict(
             xref='paper', yref='paper',
-            x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
-            text=f"<br>🎯{agent} Action: {action_info['action']} \
-                    <br>✅Success: {action_info['success']} \
-                    <br>💰Reward: {reward} \
-                    <br>💎Accumulated {agent} Reward: {accumulate_reward}",
+            x=0.1, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            text=f"""
+                <br>🎯{agent} Action: {action_info['action']}
+                <br>✅Success: {action_info['success']}
+                <br>👀Observations: 
+                <br>{format_dict_for_display(sim_obs)}
+                <br>💰Reward: {reward}
+                """,
             showarrow=False,
-            visible=True,  # Initially not visible
+            visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
-                size=10,
+                size=8,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+                ),
+            bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
+            bordercolor="black",  # Black border color
+            borderwidth=2  # Border width
             )
-        ))
+        
+        emulation_obs = dict(
+            xref='paper', yref='paper',
+            x=0.1, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            text=f"""<br>🎯{agent} Action: {action_info['action']}
+                    <br>✅Success: {action_info['success']}
+                    <br>👀Observations:
+                    <br>{mininet_obs}                    
+                    <br>💰Reward: {reward}
+                """,
+            showarrow=False,
+            visible=True,  
+            align="left",  # Ensure text is aligned for both agents
+            font=dict(
+                size=8,
+                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+                ),
+            bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
+            bordercolor="black",  # Black border color
+            borderwidth=2  # Border width
+            )
+        
+        observations_annotations = [simulation_obs, emulation_obs]
         
         # Prepare and plot the figure
         fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
@@ -189,26 +239,30 @@ class NetworkVisualizer:
         # Add a button to toggle the visibility of observation annotations
         fig.update_layout(
             width=1000,
-            annotations=annotations,  # Include the annotations by default
+            annotations=[],  # Include the annotations by default, shown initially
             updatemenus=[
                 dict(
-                    buttons=list([
-                        dict(label="Show Observations",
-                             method="update",
-                             args=[{"visible": [True, True, True, True]},  # Set the visibility as required
-                                   {"annotations": annotations}]),
+                    buttons=[
+                        dict(label="Show Simulation Observations",
+                             method="relayout",
+                             args=[{"annotations": [annotations[0]]}]),  # Assuming annotations[0] is for simulation
+                        dict(label="Show Emulation Observations",
+                             method="relayout",
+                             args=[{"annotations": [annotations[1]]}]),  # Assuming annotations[1] is for emulation
                         dict(label="Hide Observations",
-                             method="update",
-                             args=[{"visible": [True, True, True, False]},  # Reset to original visibility
-                                   {"annotations": []}])
-                    ]),
+                             method="relayout",
+                             args=[{"annotations": []}]),  # This should hide all annotations
+                    ],
                     direction="down",
-                    pad={"r": 10, "t": 10},
+                    # pad={"r": 20, "t": 20},
                     showactive=True,
                     # x=0.05,
                     # xanchor="left",
-                    y=0.5,
-                    # yanchor="top"
+                    # y=0.7,
+                    yanchor="top",
+                    bordercolor="#c7c7c7",
+                    borderwidth=2,
+                    # bgcolor="#ff7f0e",
                 )
             ]
         )
