@@ -225,6 +225,8 @@ class GameStateManager:
 
         self._update_rewards(host_type, reward)
 
+        sim_obs = {key: value for key, value in self.cyborg.get_observation(host_type).items() \
+                   if key != 'success'}
         accu_reward = self._get_agent_rewards(host_type)
         # print(self.accumulated_rewards)
         
@@ -237,6 +239,7 @@ class GameStateManager:
             'host_info': host_info.copy(),
             'action_info': action_info.copy(),
             'host_map': self.host_map.copy(),
+            'sim_obs': sim_obs,
             'reward': reward,
             'accumulate_reward': accu_reward,
         }
@@ -257,6 +260,13 @@ class GameStateManager:
             
         return state_snapshot
 
+    def update_state_snapshot(self, state_snapshot, observation):
+        # @To-Do: get mininet observation involed
+        for type in ['Blue', 'Red']:
+            obs = observation[type]
+            state_snapshot[type]['mininet_obs'] = obs
+        return state_snapshot    
+        
     def reset(self):
         self.compromised_hosts = set(['User0'])
         self.exploited_hosts = set()
