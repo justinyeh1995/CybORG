@@ -159,29 +159,29 @@ class NetworkVisualizer:
                 color="black")
         )        
 
-        # Create layout
+        # Create layout: Main Structure
         layout=go.Layout(
                             title=f'<br>Total Number of Steps: {num_steps}\
                                     <br>Red Agent Name: {red_agent_name}\
                                     <br>Episode: {episode+1}\
                                     <br>Display <b>{agent}</b> Agent\
                                     <br><b>Step {step+1}</b>',
-                            title_x=0.00,  # Centers the title
-                            title_y=0.98,
+                            title_x=0.00,
+                            title_y=1.00,
                             titlefont_size=10,
                             showlegend=False,
                             hovermode='closest',
-                            margin=dict(b=15,l=5,r=50,t=80),
+                            margin=dict(b=15,l=0,r=200,t=80),
                             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
                         )
         
         # Create annotations for agent actions, initially invisible
-        vertical_padding = 0.2
+        vertical_padding = 0.05
         # for idx, action_info in enumerate(action_info):
         simulation_obs = dict(
             xref='paper', yref='paper',
-            x=0.1, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            x=1.50, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"""
                 <br>🎯{agent} Action: {action_info['action']}
                 <br>✅Success: {action_info['success']}
@@ -193,7 +193,7 @@ class NetworkVisualizer:
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
-                size=8,
+                size=6,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
                 ),
             bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
@@ -203,7 +203,7 @@ class NetworkVisualizer:
         
         emulation_obs = dict(
             xref='paper', yref='paper',
-            x=0.1, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            x=1.50, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"""<br>🎯{agent} Action: {action_info['action']}
                     <br>✅Success: {action_info['success']}
                     <br>👀Observations:
@@ -214,7 +214,7 @@ class NetworkVisualizer:
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
-                size=8,
+                size=6,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
                 ),
             bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
@@ -256,10 +256,10 @@ class NetworkVisualizer:
                     direction="down",
                     # pad={"r": 20, "t": 20},
                     showactive=True,
-                    # x=0.05,
+                    x=0.5,
                     # xanchor="left",
-                    # y=0.7,
-                    yanchor="top",
+                    y=1.25,
+                    # yanchor="top",
                     bordercolor="#c7c7c7",
                     borderwidth=2,
                     # bgcolor="#ff7f0e",
