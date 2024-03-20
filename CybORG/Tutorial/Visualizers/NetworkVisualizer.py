@@ -181,7 +181,7 @@ class NetworkVisualizer:
         # for idx, action_info in enumerate(action_info):
         simulation_obs = dict(
             xref='paper', yref='paper',
-            x=1.50, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"""
                 <br>🎯{agent} Action: {action_info['action']}
                 <br>✅Success: {action_info['success']}
@@ -203,7 +203,7 @@ class NetworkVisualizer:
         
         emulation_obs = dict(
             xref='paper', yref='paper',
-            x=1.50, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"""<br>🎯{agent} Action: {action_info['action']}
                     <br>✅Success: {action_info['success']}
                     <br>👀Observations:
